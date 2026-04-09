@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAW Label Compliance Checker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0C447C;
+  --mid: #185FA5;
+  --sky: #378ADD;
+  --light: #B5D4F4;
+  --cream: #F8F5EF;
+  --white: #FFFFFF;
+  --border: #dce8f5;
+  --muted: #5a7a9a;
+  --text: #1a2a3a;
+  --red: #C0392B;
+  --amber: #B7770D;
+  --green: #1E8449;
+  --red-bg: #fdecea;
+  --amber-bg: #fef6e4;
+  --green-bg: #eafaf1;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+header{background:var(--navy);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(12,68,124,0.25);}
+.logo{font-family:'Playfair Display',serif;color:#fff;font-size:1.05rem;font-weight:700;letter-spacing:.02em;}
+.logo-sub{color:var(--light);font-weight:400;}
+.badge{background:rgba(181,212,244,.15);border:1px solid rgba(181,212,244,.3);color:var(--light);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:20px;}
+main{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 5rem;}
+.page-title{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--navy);font-weight:700;margin-bottom:.3rem;}
+.page-sub{color:var(--muted);font-size:.88rem;margin-bottom:2rem;}
+.stepbar{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:2rem;}
+.sb-step{flex:1;padding:9px 12px;display:flex;align-items:center;gap:8px;font-size:.74rem;font-weight:600;color:var(--muted);background:#fff;border-right:1px solid var(--border);transition:all .25s;}
+.sb-step:last-child{border-right:none;}
+.sb-step.active{background:var(--navy);color:#fff;}
+.sb-step.done{background:var(--light);color:var(--navy);}
+.sb-num{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;background:var(--border);color:var(--muted);}
+.sb-step.active .sb-num{background:rgba(255,255,255,.2);color:#fff;}
+.sb-step.done .sb-num{background:var(--navy);color:#fff;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.75rem;margin-bottom:1.25rem;box-shadow:0 2px 10px rgba(12,68,124,.05);}
+.card-title{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--navy);margin-bottom:1.3rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.type-card{border:2px solid var(--border);border-radius:10px;padding:1.2rem 1rem;cursor:pointer;transition:all .22s;background:var(--cream);position:relative;}
+.type-card:hover{border-color:var(--sky);background:#f0f7ff;}
+.type-card.selected{border-color:var(--navy);background:#e8f0fb;}
+.tc-icon{font-size:1.8rem;margin-bottom:.5rem;}
+.tc-title{font-weight:700;font-size:.9rem;color:var(--navy);margin-bottom:.25rem;}
+.tc-desc{font-size:.76rem;color:var(--muted);line-height:1.5;}
+.tc-check{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:.65rem;display:none;align-items:center;justify-content:center;font-weight:700;}
+.type-card.selected .tc-check{display:flex;}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:.9rem;}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg-row.three{grid-template-columns:1fr 1fr 1fr;}
+.fg label{font-size:.73rem;font-weight:700;color:var(--navy);letter-spacing:.05em;text-transform:uppercase;}
+.fg .hint{font-size:.72rem;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;}
+.fg select,.fg input{padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.86rem;color:var(--text);background:var(--cream);width:100%;transition:border-color .2s;}
+.fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%235a7a9a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;appearance:none;cursor:pointer;}
+.fg select:focus,.fg input:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(55,138,221,.1);background:#fff;}
+.fg .field-note{font-size:.72rem;color:var(--muted);margin-top:3px;font-style:italic;}
+.market-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mkt{display:flex;align-items:center;gap:9px;padding:8px 11px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;transition:all .2s;background:var(--cream);user-select:none;}
+.mkt:hover{border-color:var(--sky);background:#f0f7ff;}
+.mkt.on{border-color:var(--navy);background:#e8f0fb;}
+.mkt-box{width:15px;height:15px;border:2px solid var(--border);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;font-size:.6rem;transition:all .2s;}
+.mkt.on .mkt-box{background:var(--navy);border-color:var(--navy);color:#fff;}
+.mkt-lbl{font-size:.84rem;font-weight:500;}
+.tog{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1.5px solid var(--border);border-radius:6px;background:var(--cream);cursor:pointer;margin-bottom:7px;transition:all .2s;user-select:none;}
+.tog:hover{border-color:var(--sky);background:#f0f7ff;}
+.tog.on{border-color:var(--navy);background:#e8f0fb;}
+.tl{font-size:.85rem;font-weight:600;}
+.td{font-size:.73rem;color:var(--muted);margin-top:2px;}
+.tog-sw{width:36px;height:18px;background:var(--border);border-radius:9px;position:relative;flex-shrink:0;margin-left:12px;transition:background .25s;}
+.tog.on .tog-sw{background:var(--navy);}
+.tog-knob{width:12px;height:12px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.tog.on .tog-knob{left:21px;}
+.upload-label-text{font-size:.73rem;font-weight:700;color:var(--navy);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.upload-zone{border:2px dashed var(--light);border-radius:9px;padding:1.8rem 1.5rem;text-align:center;cursor:pointer;transition:all .22s;background:#f4f9ff;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--sky);background:#e8f3ff;}
+.upload-zone.has-file{border-style:solid;border-color:var(--navy);background:#e8f0fb;}
+.uz-icon{font-size:1.9rem;margin-bottom:.5rem;}
+.uz-title{font-weight:600;color:var(--navy);font-size:.9rem;margin-bottom:.2rem;}
+.uz-hint{color:var(--muted);font-size:.76rem;}
+.file-pill{display:none;align-items:center;gap:9px;padding:8px 12px;background:#fff;border:1px solid var(--border);border-radius:6px;margin-top:.7rem;}
+.file-pill.show{display:flex;}
+.fp-name{font-size:.83rem;font-weight:600;color:var(--navy);}
+.fp-size{font-size:.72rem;color:var(--muted);}
+.fp-rm{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:2px 6px;border-radius:4px;transition:all .2s;}
+.fp-rm:hover{background:#fee;color:var(--red);}
+.vintage-panel{display:none;margin-top:1.2rem;padding-top:1.2rem;border-top:1px solid var(--border);}
+.vintage-panel.show{display:block;}
+.vintage-banner{background:#fff8e6;border:1px solid #f0d080;border-radius:7px;padding:9px 13px;font-size:.8rem;color:#7a5a00;margin-bottom:1rem;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.btn{padding:10px 24px;border-radius:7px;font-family:inherit;font-size:.88rem;font-weight:700;cursor:pointer;border:none;transition:all .2s;letter-spacing:.01em;}
+.btn-primary{background:var(--navy);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--mid);transform:translateY(-1px);box-shadow:0 4px 14px rgba(12,68,124,.2);}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-secondary{background:transparent;color:var(--navy);border:1.5px solid var(--navy);}
+.btn-secondary:hover{background:#e8f0fb;}
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:1.3rem;}
+.prog-step{display:flex;align-items:center;gap:12px;padding:10px 13px;border-radius:7px;font-size:.86rem;font-weight:500;color:var(--muted);background:var(--cream);margin-bottom:6px;transition:all .3s;}
+.prog-step.running{background:#e8f3ff;color:var(--navy);}
+.prog-step.done{background:var(--green-bg);color:var(--green);}
+.prog-step.err{background:var(--red-bg);color:var(--red);}
+.ps-icon{font-size:.95rem;width:22px;text-align:center;flex-shrink:0;}
+.spinner{width:15px;height:15px;border:2px solid var(--light);border-top-color:var(--navy);border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.err-msg{background:var(--red-bg);border:1px solid #f5c6c4;border-radius:8px;padding:10px 14px;color:var(--red);font-size:.84rem;margin-top:.8rem;display:none;}
+.err-msg.show{display:block;}
+.rpt-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.3rem;padding-bottom:1rem;border-bottom:1px solid var(--border);}
+.rpt-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--navy);}
+.rpt-meta{font-size:.75rem;color:var(--muted);margin-top:3px;}
+.pills{display:flex;gap:7px;flex-wrap:wrap;}
+.pill{padding:4px 11px;border-radius:20px;font-size:.74rem;font-weight:700;}
+.pill-r{background:var(--red-bg);color:var(--red);}
+.pill-a{background:var(--amber-bg);color:var(--amber);}
+.pill-g{background:var(--green-bg);color:var(--green);}
+.pill-b{background:#e8f0fb;color:var(--navy);}
+.rpt-section{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:1.3rem 0 .6rem;display:flex;align-items:center;gap:9px;}
+.rpt-section::after{content:'';flex:1;height:1px;background:var(--border);}
+.finding{border-radius:8px;padding:11px 13px;margin-bottom:7px;border-left:3px solid transparent;font-size:.86rem;}
+.finding-title{font-weight:700;margin-bottom:3px;}
+.finding-body{color:var(--muted);line-height:1.55;}
+.finding-ref{font-size:.72rem;margin-top:4px;opacity:.7;font-style:italic;}
+.f-critical{background:var(--red-bg);border-left-color:var(--red);}
+.f-critical .finding-title{color:var(--red);}
+.f-advisory{background:var(--amber-bg);border-left-color:var(--amber);}
+.f-advisory .finding-title{color:var(--amber);}
+.f-pass{background:var(--green-bg);border-left-color:var(--green);}
+.f-pass .finding-title{color:var(--green);}
+.f-info{background:#f0f7ff;border-left-color:var(--sky);}
+.f-info .finding-title{color:var(--mid);}
+.f-diff{background:#f5eeff;border-left-color:#9b59b6;}
+.f-diff .finding-title{color:#7a3db8;}
+.diff-table,.ann-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.4rem;}
+.diff-table th,.ann-table th{background:var(--navy);color:#fff;padding:7px 11px;text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+.diff-table th:first-child,.ann-table th:first-child{border-radius:6px 0 0 0;}
+.diff-table th:last-child,.ann-table th:last-child{border-radius:0 6px 0 0;}
+.diff-table td,.ann-table td{padding:7px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+.diff-table tr:nth-child(even) td,.ann-table tr:nth-child(even) td{background:#fafcff;}
+.diff-table tr:last-child td,.ann-table tr:last-child td{border-bottom:none;}
+.diff-table .changed td{border-left:3px solid var(--amber);background:#fffbf0;}
+.diff-table .flagged td{border-left:3px solid #e67e22;background:#fff3e0;}
+.diff-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.68rem;font-weight:700;}
+.db-same{background:#eafaf1;color:var(--green);}
+.db-changed{background:var(--amber-bg);color:var(--amber);}
+.db-flag{background:#fff3e0;color:#c0520a;}
+.type-badge{background:var(--light);color:var(--navy);font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.action-bar{display:flex;gap:9px;justify-content:flex-end;margin-top:1.3rem;padding-top:1rem;border-top:1px solid var(--border);flex-wrap:wrap;}
+.copy-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--cream);border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.78rem;font-weight:700;color:var(--navy);cursor:pointer;transition:all .2s;}
+.copy-btn:hover{background:#e8f0fb;border-color:var(--sky);}
+.copy-btn.copied{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+.disclaimer{font-size:.72rem;color:var(--muted);background:#f7faff;border:1px solid var(--border);border-radius:6px;padding:9px 13px;margin-top:.9rem;line-height:1.65;}
+.hidden{display:none!important;}
+@media(max-width:600px){
+  .fg-row,.fg-row.three,.type-grid,.market-grid{grid-template-columns:1fr;}
+  main{padding:1.5rem 1rem 3rem;}
+  .rpt-header{flex-direction:column;}
+  .sb-step span{display:none;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Guy Anderson Wines <span class="logo-sub">/ Label Compliance</span></div>
+  <div class="badge">Internal Tool</div>
+</header>
+<main>
+  <h1 class="page-title">Wine Label Checker</h1>
+  <p class="page-sub">Upload label artwork to check compliance, compare vintage changes, and extract print specifications.</p>
+
+  <div class="stepbar">
+    <div class="sb-step active" id="sb1"><div class="sb-num">1</div> <span>Details</span></div>
+    <div class="sb-step" id="sb2"><div class="sb-num">2</div> <span>Artwork</span></div>
+    <div class="sb-step" id="sb3"><div class="sb-num">3</div> <span>Analysis</span></div>
+    <div class="sb-step" id="sb4"><div class="sb-num">4</div> <span>Report</span></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-title">🏷️ What type of label is this?</div>
+      <div class="type-grid">
+        <div class="type-card" id="tc-new" onclick="selectType('new')">
+          <div class="tc-check">✓</div>
+          <div class="tc-icon">✨</div>
+          <div class="tc-title">New Product / Label</div>
+          <div class="tc-desc">A brand new wine, SKU, or label design with no previous version to compare against.</div>
+        </div>
+        <div class="type-card" id="tc-vintage" onclick="selectType('vintage')">
+          <div class="tc-check">✓</div>
+          <div class="tc-icon">🔄</div>
+          <div class="tc-title">New Vintage — Existing Product</div>
+          <div class="tc-desc">An updated vintage of an existing wine. Previous label artwork required for comparison.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🍷 Wine &amp; Market Details</div>
+      <div class="fg-row">
+        <div class="fg">
+          <label>Wine Type <span style="color:var(--red)">*</span></label>
+          <select id="wine-type">
+            <option value="">Select…</option>
+            <option>Still Wine</option><option>Sparkling Wine</option><option>Fortified Wine</option>
+            <option>Rosé</option><option>Orange Wine</option><option>Low / No Alcohol Wine</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Label Language</label>
+          <select id="label-lang">
+            <option value="">Select…</option>
+            <option>English only</option><option>English + Spanish</option><option>English + French</option>
+            <option>English + German</option><option>Multi-language</option><option>Spanish only</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Target Markets <span style="color:var(--red)">*</span> <span class="hint">— select all that apply</span></label>
+        <div class="market-grid">
+          <div class="mkt" onclick="toggleMkt(this,'UK')"><div class="mkt-box">✓</div><span class="mkt-lbl">🇬🇧 United Kingdom</span></div>
+          <div class="mkt" onclick="toggleMkt(this,'EU')"><div class="mkt-box">✓</div><span class="mkt-lbl">🇪🇺 European Union</span></div>
+          <div class="mkt" onclick="toggleMkt(this,'USA')"><div class="mkt-box">✓</div><span class="mkt-lbl">🇺🇸 United States</span></div>
+          <div class="mkt" onclick="toggleMkt(this,'NZ')"><div class="mkt-box">✓</div><span class="mkt-lbl">🇳🇿 New Zealand</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Product Details</div>
+      <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem;">Enter expected values — these will be cross-checked against what appears on the artwork.</p>
+      <div class="fg-row">
+        <div class="fg">
+          <label>Barcode (EAN / UPC)</label>
+          <input type="text" id="barcode" placeholder="e.g. 5060123456789">
+          <span class="field-note">Include all if multiple (e.g. UK + US versions)</span>
+        </div>
+        <div class="fg">
+          <label>Internal Product Code(s)</label>
+          <input type="text" id="product-code" placeholder="e.g. GAW109, BA-RJ-75">
+        </div>
+      </div>
+      <div class="fg-row three">
+        <div class="fg">
+          <label>ABV (%)</label>
+          <input type="number" id="abv" placeholder="e.g. 13.5" step="0.1" min="0" max="25">
+        </div>
+        <div class="fg">
+          <label>Bottle Size</label>
+          <select id="bottle-size">
+            <option value="">Select…</option>
+            <option>187.5ml</option><option>250ml</option><option>375ml</option><option>500ml</option>
+            <option>750ml</option><option>1L</option><option>1.5L</option><option>3L</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Vintage Year</label>
+          <input type="text" id="vintage-year" placeholder="e.g. 2023">
+        </div>
+      </div>
+      <div class="fg-row">
+        <div class="fg">
+          <label>Calories per 100ml <span class="hint">— if applicable</span></label>
+          <input type="number" id="calories" placeholder="e.g. 68" min="0">
+          <span class="field-note">Required: EU from Dec 2023 · UK from Feb 2026</span>
+        </div>
+        <div class="fg">
+          <label>Allergen Declaration</label>
+          <input type="text" id="allergens" placeholder="e.g. Contains sulphites">
+        </div>
+      </div>
+      <div class="fg">
+        <label>Additional Notes <span class="hint">— optional</span></label>
+        <input type="text" id="extra-notes" placeholder="e.g. Back label only, retailer font requirement, USA COLA pending…">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚙️ Label Configuration</div>
+      <div class="tog" onclick="togSwitch(this,'bespoke')">
+        <div><div class="tl">Bespoke customer label</div><div class="td">Designed for a specific retailer (e.g. Aldi, M&amp;S own label)</div></div>
+        <div class="tog-sw"><div class="tog-knob"></div></div>
+      </div>
+      <div class="tog" onclick="togSwitch(this,'dual')">
+        <div><div class="tl">Dual-market compliant (UK + EU)</div><div class="td">Must satisfy UK and EU post-Brexit requirements simultaneously</div></div>
+        <div class="tog-sw"><div class="tog-knob"></div></div>
+      </div>
+      <div class="tog" onclick="togSwitch(this,'organic')">
+        <div><div class="tl">Organic / certified wine</div><div class="td">Organic certification logos or claims present on label</div></div>
+        <div class="tog-sw"><div class="tog-knob"></div></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goStep2()">Continue to Artwork Upload →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="step2" class="hidden">
+    <div class="card">
+      <div class="card-title">📎 Upload Label Artwork</div>
+      <span class="upload-label-text" id="new-lbl-heading">New Label Artwork <span style="color:var(--red)">*</span></span>
+      <div class="upload-zone" id="uz-new" onclick="document.getElementById('fi-new').click()"
+           ondragover="dragOver(event,'uz-new')" ondragleave="dragLeave('uz-new')" ondrop="drop(event,'new')">
+        <div class="uz-icon">📄</div>
+        <div class="uz-title">Click to upload or drag &amp; drop</div>
+        <div class="uz-hint">PDF only · Max 20MB · Include all panels if possible</div>
+      </div>
+      <input type="file" id="fi-new" accept=".pdf" style="display:none" onchange="fileSelected(event,'new')">
+      <div class="file-pill" id="fp-new">
+        <span>📄</span>
+        <div><div class="fp-name" id="fp-new-name"></div><div class="fp-size" id="fp-new-size"></div></div>
+        <button class="fp-rm" onclick="removeFile('new')">✕</button>
+      </div>
+
+      <div class="vintage-panel" id="vintage-panel">
+        <div class="vintage-banner">⚠️ <div><strong>Vintage comparison mode:</strong> Upload the <em>previous vintage</em> label below. The tool will produce a full side-by-side difference report.</div></div>
+        <span class="upload-label-text">Previous Vintage Label Artwork <span style="color:var(--red)">*</span></span>
+        <div class="upload-zone" id="uz-prev" onclick="document.getElementById('fi-prev').click()"
+             ondragover="dragOver(event,'uz-prev')" ondragleave="dragLeave('uz-prev')" ondrop="drop(event,'prev')">
+          <div class="uz-icon">🗂️</div>
+          <div class="uz-title">Upload previous vintage PDF</div>
+          <div class="uz-hint">PDF only · Max 20MB</div>
+        </div>
+        <input type="file" id="fi-prev" accept=".pdf" style="display:none" onchange="fileSelected(event,'prev')">
+        <div class="file-pill" id="fp-prev">
+          <span>📄</span>
+          <div><div class="fp-name" id="fp-prev-name"></div><div class="fp-size" id="fp-prev-size"></div></div>
+          <button class="fp-rm" onclick="removeFile('prev')">✕</button>
+        </div>
+      </div>
+
+      <div class="err-msg" id="upload-err"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goStep1()">← Back</button>
+        <button class="btn btn-primary" id="btn-analyse" onclick="runAnalysis()" disabled>Run Compliance Check →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div id="step3" class="hidden">
+    <div class="card">
+      <div class="card-title">🔍 Analysing Label…</div>
+      <div id="prog-steps">
+        <div class="prog-step" id="ps-read"><div class="ps-icon">📄</div> Reading label artwork &amp; extracting all text</div>
+        <div class="prog-step" id="ps-regs"><div class="ps-icon">📋</div> Looking up current labelling regulations</div>
+        <div class="prog-step" id="ps-compliance"><div class="ps-icon">⚖️</div> Running compliance check</div>
+        <div class="prog-step" id="ps-ann"><div class="ps-icon">🎨</div> Extracting print annotations</div>
+        <div class="prog-step" id="ps-vintage" style="display:none"><div class="ps-icon">🔄</div> Comparing new vs previous vintage</div>
+        <div class="prog-step" id="ps-report"><div class="ps-icon">📝</div> Generating report</div>
+      </div>
+    </div>
+    <div class="err-msg" id="analysis-err"></div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div id="step4" class="hidden">
+    <div class="card">
+      <div class="rpt-header">
+        <div>
+          <div class="rpt-title" id="rpt-title">Compliance Report</div>
+          <div class="rpt-meta" id="rpt-meta"></div>
+        </div>
+        <div class="pills" id="rpt-pills"></div>
+      </div>
+      <div id="rpt-body"></div>
+      <div class="action-bar">
+        <button class="copy-btn" id="copy-btn" onclick="copyReport()">📋 Copy report</button>
+        <button class="btn btn-secondary" onclick="resetTool()">Check another label</button>
+      </div>
+      <div class="disclaimer"><strong>Disclaimer:</strong> AI-generated using publicly available regulatory information — use as a working guide only. Always verify critical requirements with a qualified regulatory specialist before printing. GAW accepts no liability for reliance on this output alone.</div>
+    </div>
+  </div>
+</main>
+
+<script>
+const S = {
+  labelType:null, markets:[], wineType:'', labelLang:'', barcode:'', productCode:'',
+  abv:'', bottleSize:'', vintageYear:'', calories:'', allergens:'', extraNotes:'',
+  bespoke:false, dual:false, organic:false,
+  fileNewData:null, filePrevData:null
+};
+
+function setStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('step'+i).classList.toggle('hidden', i!==n);
+    const sb = document.getElementById('sb'+i);
+    sb.classList.remove('active','done');
+    if (i===n) sb.classList.add('active');
+    if (i<n) sb.classList.add('done');
+  });
+}
+function goStep1(){ setStep(1); }
+function goStep2(){
+  S.wineType = document.getElementById('wine-type').value;
+  S.labelLang = document.getElementById('label-lang').value;
+  S.barcode = document.getElementById('barcode').value.trim();
+  S.productCode = document.getElementById('product-code').value.trim();
+  S.abv = document.getElementById('abv').value;
+  S.bottleSize = document.getElementById('bottle-size').value;
+  S.vintageYear = document.getElementById('vintage-year').value.trim();
+  S.calories = document.getElementById('calories').value;
+  S.allergens = document.getElementById('allergens').value.trim();
+  S.extraNotes = document.getElementById('extra-notes').value.trim();
+  if (!S.labelType) { alert('Please select a label type.'); return; }
+  if (!S.wineType) { alert('Please select a wine type.'); return; }
+  if (!S.markets.length) { alert('Please select at least one target market.'); return; }
+  setStep(2); checkReady();
+}
+
+function selectType(t) {
+  S.labelType = t;
+  document.getElementById('tc-new').classList.toggle('selected', t==='new');
+  document.getElementById('tc-vintage').classList.toggle('selected', t==='vintage');
+  document.getElementById('vintage-panel').classList.toggle('show', t==='vintage');
+  document.getElementById('new-lbl-heading').innerHTML = t==='vintage'
+    ? 'New Vintage Label Artwork <span style="color:var(--red)">*</span>'
+    : 'New Label Artwork <span style="color:var(--red)">*</span>';
+  document.getElementById('ps-vintage').style.display = t==='vintage' ? 'flex' : 'none';
+  checkReady();
+}
+function toggleMkt(el, v) {
+  el.classList.toggle('on');
+  S.markets = el.classList.contains('on') ? [...S.markets,v] : S.markets.filter(m=>m!==v);
+}
+function togSwitch(el, k) { el.classList.toggle('on'); S[k]=el.classList.contains('on'); }
+
+function dragOver(e,id){ e.preventDefault(); document.getElementById(id).classList.add('drag'); }
+function dragLeave(id){ document.getElementById(id).classList.remove('drag'); }
+function drop(e,slot){ e.preventDefault(); dragLeave('uz-'+slot); const f=e.dataTransfer.files[0]; if(f) handleFile(f,slot); }
+function fileSelected(e,slot){ const f=e.target.files[0]; if(f) handleFile(f,slot); }
+
+function handleFile(file, slot) {
+  const err = document.getElementById('upload-err');
+  if (file.type!=='application/pdf'){ showErr(err,'PDF files only.'); return; }
+  if (file.size>20*1024*1024){ showErr(err,'Max 20MB.'); return; }
+  err.classList.remove('show');
+  const reader = new FileReader();
+  reader.onload = e => {
+    const b64 = e.target.result.split(',')[1];
+    if (slot==='new'){ S.fileNewData=b64; } else { S.filePrevData=b64; }
+    document.getElementById('uz-'+slot).classList.add('has-file');
+    document.getElementById('fp-'+slot+'-name').textContent = file.name;
+    document.getElementById('fp-'+slot+'-size').textContent = (file.size/1024).toFixed(1)+' KB';
+    document.getElementById('fp-'+slot).classList.add('show');
+    checkReady();
+  };
+  reader.readAsDataURL(file);
+}
+function removeFile(slot){
+  if(slot==='new') S.fileNewData=null; else S.filePrevData=null;
+  document.getElementById('uz-'+slot).classList.remove('has-file');
+  document.getElementById('fp-'+slot).classList.remove('show');
+  document.getElementById('fi-'+slot).value='';
+  checkReady();
+}
+function checkReady(){
+  const btn=document.getElementById('btn-analyse');
+  if(btn) btn.disabled = !S.fileNewData || (S.labelType==='vintage' && !S.filePrevData);
+}
+function showErr(el,msg){ el.textContent=msg; el.classList.add('show'); }
+
+function setProg(id,status){
+  const el=document.getElementById(id); if(!el) return;
+  el.classList.remove('running','done','err');
+  const icons={'ps-read':'📄','ps-regs':'📋','ps-compliance':'⚖️','ps-ann':'🎨','ps-vintage':'🔄','ps-report':'📝'};
+  const ic=el.querySelector('.ps-icon,.spinner');
+  if(status==='running'){ el.classList.add('running'); if(ic) ic.outerHTML='<div class="spinner"></div>'; }
+  else if(status==='done'){ el.classList.add('done'); if(ic) ic.outerHTML='<div class="ps-icon">✅</div>'; }
+  else if(status==='error'){ el.classList.add('err'); if(ic) ic.outerHTML='<div class="ps-icon">❌</div>'; }
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function runAnalysis(){
+  setStep(3);
+  document.getElementById('analysis-err').classList.remove('show');
+  const mktList=S.markets.join(', ');
+  const flags=[S.bespoke&&'bespoke customer label',S.dual&&'dual-market UK+EU',S.organic&&'organic/certified'].filter(Boolean);
+  const pd=`Barcode: ${S.barcode||'not provided'}\nProduct code: ${S.productCode||'not provided'}\nABV: ${S.abv?S.abv+'%':'not provided'}\nBottle size: ${S.bottleSize||'not provided'}\nVintage year: ${S.vintageYear||'not provided'}\nCalories/100ml: ${S.calories||'not provided'}\nAllergens: ${S.allergens||'not provided'}`;
+  const vintageBlock = S.labelType==='vintage' ? `
+VINTAGE COMPARISON MODE — two PDFs provided (Doc 1 = new, Doc 2 = previous).
+For the vintageDiff array, compare key fields: vintage year, ABV, barcode, Pantone refs, label dimensions, finish specs, font styles, certification logos, producer info, country of origin, back label text.
+Status rules: SAME = unchanged. CHANGED = expected update (year, ABV, barcode, text). FLAGGED = unexpected change that needs sign-off (Pantones, dimensions, finishes, fonts, logos, producer address).` : '';
+
+  const prompt=`You are a specialist wine label compliance consultant for Guy Anderson Wines (GAW), a UK wine supplier.
+
+Label type: ${S.labelType==='vintage'?'NEW VINTAGE of existing product':'NEW product / label'}
+Wine type: ${S.wineType} | Language: ${S.labelLang||'not specified'} | Markets: ${mktList}
+Flags: ${flags.length?flags.join('; '):'none'} | Notes: ${S.extraNotes||'none'}
+
+PRODUCT DETAILS (verify these appear correctly on label):
+${pd}
+${vintageBlock}
+
+TASKS:
+1. Read and extract all text from the label(s)
+2. Search web for current labelling regs for: ${mktList}${S.markets.includes('UK')?' (UK post-Brexit FSA/AWRS)':''}${S.markets.includes('EU')?' (EU Reg 2021/2117 incl nutrition/ingredients)':''}${S.markets.includes('USA')?' (TTB COLA)':''}${S.markets.includes('NZ')?' (FSANZ/Wine NZ)':''}
+3. Verify all product details match label
+4. Check compliance for all markets — flag EVERY issue, critical and minor
+5. Extract all print annotations: Pantone refs, dimensions/dielines, finishes (varnish/anti-scuff/foil/laminate), fonts, barcodes, SKU refs
+
+Respond in pure JSON only (no markdown fences):
+{
+  "labelSummary":"",
+  "marketsChecked":[],
+  "productVerification":{
+    "barcode":{"expected":"","found":"","match":true},
+    "abv":{"expected":"","found":"","match":true},
+    "bottleSize":{"expected":"","found":"","match":true},
+    "vintageYear":{"expected":"","found":"","match":true},
+    "calories":{"expected":"","found":"","match":true},
+    "allergens":{"expected":"","found":"","match":true}
+  },
+  "criticalIssues":[{"title":"","detail":"","market":"","ref":""}],
+  "advisoryIssues":[{"title":"","detail":"","market":"","ref":""}],
+  "passes":[{"title":"","detail":""}],
+  "annotations":[{"type":"Pantone|Dimension|Finish|Font|Barcode|Other","item":"","value":"","notes":""}],
+  "vintageDiff":[{"field":"","oldValue":"","newValue":"","status":"SAME|CHANGED|FLAGGED","note":""}],
+  "vintageSummary":"",
+  "overallVerdict":"PASS|ADVISORY|FAIL",
+  "summaryNote":""
+}`;
+
+  try {
+    setProg('ps-read','running'); await sleep(300);
+    const content = S.labelType==='vintage' ? [
+      {type:'document',source:{type:'base64',media_type:'application/pdf',data:S.fileNewData}},
+      {type:'document',source:{type:'base64',media_type:'application/pdf',data:S.filePrevData}},
+      {type:'text',text:prompt}
+    ] : [
+      {type:'document',source:{type:'base64',media_type:'application/pdf',data:S.fileNewData}},
+      {type:'text',text:prompt}
+    ];
+
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content}]})
+    });
+    if(!res.ok){ const e=await res.json(); throw new Error(e.error?.message||'API error '+res.status); }
+    setProg('ps-read','done'); setProg('ps-regs','running'); await sleep(200);
+    const data=await res.json();
+    const allText=data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    setProg('ps-regs','done'); setProg('ps-compliance','running'); await sleep(200);
+
+    let report;
+    try {
+      const m=allText.match(/\{[\s\S]*\}/); if(!m) throw new Error();
+      report=JSON.parse(m[0]);
+    } catch {
+      report={labelSummary:'Analysed.',marketsChecked:S.markets,productVerification:{},criticalIssues:[],
+        advisoryIssues:[{title:'Full report',detail:allText,market:'All',ref:''}],
+        passes:[],annotations:[],vintageDiff:[],vintageSummary:'',overallVerdict:'ADVISORY',summaryNote:'Narrative report — see advisory section.'};
+    }
+
+    setProg('ps-compliance','done'); setProg('ps-ann','running'); await sleep(200); setProg('ps-ann','done');
+    if(S.labelType==='vintage'){ setProg('ps-vintage','running'); await sleep(300); setProg('ps-vintage','done'); }
+    setProg('ps-report','running'); await sleep(400); setProg('ps-report','done'); await sleep(400);
+    renderReport(report);
+  } catch(err){
+    ['ps-read','ps-regs','ps-compliance','ps-ann','ps-vintage','ps-report'].forEach(id=>{
+      const el=document.getElementById(id); if(el&&el.classList.contains('running')) setProg(id,'error');
+    });
+    showErr(document.getElementById('analysis-err'),'Analysis failed: '+err.message);
+  }
+}
+
+function renderReport(r){
+  setStep(4);
+  const v=r.overallVerdict||'ADVISORY';
+  const ve=v==='PASS'?'✅':v==='FAIL'?'❌':'⚠️';
+  document.getElementById('rpt-title').textContent=ve+' '+v+' — '+(r.labelSummary||'Label Report');
+  document.getElementById('rpt-meta').textContent='Markets: '+(r.marketsChecked||S.markets).join(', ')+' · '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const crit=(r.criticalIssues||[]).length, adv=(r.advisoryIssues||[]).length,
+        pass=(r.passes||[]).length, diff=(r.vintageDiff||[]).filter(d=>d.status!=='SAME').length;
+  document.getElementById('rpt-pills').innerHTML=[
+    crit?`<span class="pill pill-r">🔴 ${crit} Critical</span>`:'',
+    adv?`<span class="pill pill-a">🟡 ${adv} Advisory</span>`:'',
+    pass?`<span class="pill pill-g">✅ ${pass} Passed</span>`:'',
+    diff?`<span class="pill pill-b">🔄 ${diff} Changes</span>`:'',
+  ].join('');
+
+  let html='';
+  if(r.summaryNote) html+=fin('info','Summary',r.summaryNote);
+
+  const pv=r.productVerification||{};
+  const pvf=[['Barcode',pv.barcode],['ABV',pv.abv],['Bottle Size',pv.bottleSize],['Vintage Year',pv.vintageYear],['Calories',pv.calories],['Allergens',pv.allergens]].filter(([,v])=>v&&(v.expected||v.found));
+  if(pvf.length){
+    html+=`<div class="rpt-section" style="color:var(--navy)">📊 Product Detail Verification</div>`;
+    pvf.forEach(([n,v])=>{
+      if(!v)return;
+      html+=fin(v.match?'pass':'critical',`${n}: ${v.match?'✅ Match':'❌ Mismatch'}`,
+        `Expected: <strong>${esc(v.expected||'not provided')}</strong> · Found on label: <strong>${esc(v.found||'not found')}</strong>`);
+    });
+  }
+  if(crit){ html+=`<div class="rpt-section" style="color:var(--red)">🔴 Critical Compliance Failures</div>`; (r.criticalIssues||[]).forEach(i=>html+=fin('critical',i.title,i.detail,i.market,i.ref)); }
+  if(adv){ html+=`<div class="rpt-section" style="color:var(--amber)">🟡 Advisory &amp; Minor Issues</div>`; (r.advisoryIssues||[]).forEach(i=>html+=fin('advisory',i.title,i.detail,i.market,i.ref)); }
+  if(pass){ html+=`<div class="rpt-section" style="color:var(--green)">✅ Requirements Met</div>`; (r.passes||[]).forEach(i=>html+=fin('pass',i.title,i.detail)); }
+
+  const vd=r.vintageDiff||[];
+  if(vd.length){
+    html+=`<div class="rpt-section" style="color:#7a3db8">🔄 Vintage Comparison</div>`;
+    if(r.vintageSummary) html+=fin('diff','Vintage Change Summary',r.vintageSummary);
+    html+=`<table class="diff-table"><thead><tr><th>Field</th><th>Previous</th><th>New</th><th>Status</th><th>Notes</th></tr></thead><tbody>`;
+    vd.forEach(row=>{
+      const rc=row.status==='FLAGGED'?'flagged':row.status==='CHANGED'?'changed':'';
+      const bd=row.status==='SAME'?'db-same':row.status==='CHANGED'?'db-changed':'db-flag';
+      html+=`<tr class="${rc}"><td>${esc(row.field)}</td><td>${esc(row.oldValue||'—')}</td><td>${esc(row.newValue||'—')}</td><td><span class="diff-badge ${bd}">${esc(row.status)}</span></td><td style="color:var(--muted)">${esc(row.note||'—')}</td></tr>`;
+    });
+    html+='</tbody></table>';
+  }
+
+  const ann=r.annotations||[];
+  html+=`<div class="rpt-section" style="color:var(--navy)">🎨 Print Annotations</div>`;
+  if(ann.length){
+    html+=`<table class="ann-table"><thead><tr><th>Type</th><th>Item</th><th>Value</th><th>Notes</th></tr></thead><tbody>`;
+    ann.forEach(a=>{ html+=`<tr><td><span class="type-badge">${esc(a.type)}</span></td><td>${esc(a.item)}</td><td>${esc(a.value)}</td><td style="color:var(--muted)">${esc(a.notes||'—')}</td></tr>`; });
+    html+='</tbody></table>';
+  } else {
+    html+=fin('info','No annotations detected','No technical annotations found. If annotation layers exist in the artwork, ensure they are visible in the exported PDF.');
+  }
+
+  document.getElementById('rpt-body').innerHTML=html;
+  window._rptText=buildText(r);
+}
+
+function fin(type,title,body,market,ref){
+  return `<div class="finding f-${type}"><div class="finding-title">${esc(title)}</div><div class="finding-body">${esc(body)}</div>${market?`<div class="finding-ref">Market: ${esc(market)}${ref?' · Ref: '+esc(ref):''}</div>`:''}</div>`;
+}
+function esc(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+function buildText(r){
+  const L=['GAW WINE LABEL COMPLIANCE REPORT','Generated: '+new Date().toLocaleDateString('en-GB'),'Markets: '+(r.marketsChecked||S.markets).join(', '),'Verdict: '+(r.overallVerdict||'ADVISORY'),''];
+  if(r.summaryNote) L.push('SUMMARY: '+r.summaryNote,'');
+  if((r.criticalIssues||[]).length){ L.push('─── CRITICAL ISSUES ───'); r.criticalIssues.forEach((i,n)=>L.push(`${n+1}. ${i.title}`,`   ${i.detail}`,i.market?`   Market: ${i.market}`:'','')); }
+  if((r.advisoryIssues||[]).length){ L.push('─── ADVISORY ISSUES ───'); r.advisoryIssues.forEach((i,n)=>L.push(`${n+1}. ${i.title}`,`   ${i.detail}`,'')); }
+  if((r.passes||[]).length){ L.push('─── REQUIREMENTS MET ───'); r.passes.forEach(i=>L.push('✓ '+i.title)); L.push(''); }
+  if((r.vintageDiff||[]).length){ L.push('─── VINTAGE COMPARISON ───'); if(r.vintageSummary) L.push(r.vintageSummary,''); r.vintageDiff.forEach(d=>L.push(`[${d.status}] ${d.field}: ${d.oldValue||'—'} → ${d.newValue||'—'}${d.note?' ('+d.note+')':''}`)); L.push(''); }
+  if((r.annotations||[]).length){ L.push('─── PRINT ANNOTATIONS ───'); r.annotations.forEach(a=>L.push(`[${a.type}] ${a.item}: ${a.value}${a.notes?' ('+a.notes+')':''}`)); }
+  L.push('','DISCLAIMER: AI-generated for guidance only. Verify with qualified regulatory specialist before print.');
+  return L.join('\n');
+}
+
+async function copyReport(){
+  const btn=document.getElementById('copy-btn');
+  try{ await navigator.clipboard.writeText(window._rptText||''); btn.textContent='✓ Copied!'; btn.classList.add('copied'); setTimeout(()=>{ btn.innerHTML='📋 Copy report'; btn.classList.remove('copied'); },2500); }
+  catch{ btn.textContent='Select text manually to copy'; }
+}
+
+function resetTool(){
+  Object.assign(S,{labelType:null,markets:[],wineType:'',labelLang:'',barcode:'',productCode:'',abv:'',bottleSize:'',vintageYear:'',calories:'',allergens:'',extraNotes:'',bespoke:false,dual:false,organic:false,fileNewData:null,filePrevData:null});
+  ['tc-new','tc-vintage'].forEach(id=>document.getElementById(id).classList.remove('selected'));
+  ['wine-type','label-lang','bottle-size'].forEach(id=>document.getElementById(id).value='');
+  ['barcode','product-code','abv','vintage-year','calories','allergens','extra-notes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.querySelectorAll('.mkt').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.tog').forEach(el=>el.classList.remove('on'));
+  document.getElementById('vintage-panel').classList.remove('show');
+  ['new','prev'].forEach(slot=>{ document.getElementById('uz-'+slot).classList.remove('has-file'); document.getElementById('fp-'+slot).classList.remove('show'); document.getElementById('fi-'+slot).value=''; });
+  const icons={'ps-read':'📄','ps-regs':'📋','ps-compliance':'⚖️','ps-ann':'🎨','ps-vintage':'🔄','ps-report':'📝'};
+  Object.keys(icons).forEach(id=>{ const el=document.getElementById(id); if(!el)return; el.classList.remove('running','done','err'); const ic=el.querySelector('.spinner,.ps-icon'); if(ic) ic.outerHTML=`<div class="ps-icon">${icons[id]}</div>`; });
+  document.getElementById('ps-vintage').style.display='none';
+  setStep(1);
+}
+</script>
+</body>
+</html>
