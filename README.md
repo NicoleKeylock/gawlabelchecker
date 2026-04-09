@@ -1,2 +1,1 @@
-# gawlabelchecker
-A label checking APP for Guy Anderson Wines
+# GAW's Label Compliance Checker
